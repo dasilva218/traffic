@@ -4,18 +4,19 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 export default function useGeolocation() {
-    const [tracking, setIsTracking] = useState<boolean>(false)
+    const [tracking, setIsTracking] = useState<boolean>(false);
     const [fix, setFix] = useState<Position>({ latitude: 0, longitude: 0 });
-    const [isPending, startTransition] = useTransition()
+    const [isPending, startTransition] = useTransition();
+    const [isSending, setIsSending] = useState(false);
 
-    /*--- gestion des evènements ---*/
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
-    // démarre le suivi
+    // démarre le suivi GPS
     async function startTracking() {
         startTransition(() => {
-            setIsTracking(true)
-            if (!navigator.geolocation) {
-                toast.error("votre navigateur ne supporte pas la géolocalisation", { position: "top-center" });
+            setIsTracking(true);
+            if (typeof window === "undefined" || !navigator.geolocation) {
+                toast.error("Votre navigateur ne supporte pas la géolocalisation", { position: "top-center" });
                 return;
             }
             navigator.geolocation.getCurrentPosition(
@@ -24,67 +25,80 @@ export default function useGeolocation() {
                 {
                     enableHighAccuracy: true,
                     timeout: 10000,
-                    maximumAge: 5000, // Mettre à jour toutes les 5 secondes
+                    maximumAge: 5000,
                 },
             );
-
-        })
+        });
     }
 
-    // Recuperation de la position
+    // Récupération de la position GPS
     async function getPosition(position: GeolocationPosition) {
         const { latitude, longitude } = position.coords;
+        setFix({ latitude, longitude });
         await addPosition({ latitude, longitude });
-        setFix({ latitude: latitude, longitude: longitude });
-
     }
 
+    // Envoi d'une position de trafic à l'API
     const addPosition = async ({ latitude, longitude }: Position) => {
+        setIsSending(true);
         try {
-            const response = await fetch("http://localhost:4000/api/traffics", {
+            const response = await fetch(`${API_URL}/traffics`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ latitude, longitude }),
+                body: JSON.stringify({
+                    latitude: Number(latitude),
+                    longitude: Number(longitude),
+                }),
             });
 
             const data = await response.json();
-            console.log(data);
 
             if (!response.ok) {
-                throw new Error(
-                    data?.message || `Erreur HTTP ${response.status}`
-                );
+                throw new Error(data?.message || `Erreur HTTP ${response.status}`);
             }
-            toast.success(data?.message, { position: "top-center" });
-        } catch (error) {
-            toast.error("Erreur lors de l'envoi de la position", { position: "top-center" });
-        }
 
-    }
-    // Gestion des erreurs
+            toast.success(data?.message || "Signalement de trafic envoyé avec succès !", {
+                position: "top-center",
+            });
+            return data;
+        } catch (error: any) {
+            console.error("Erreur addPosition:", error);
+            toast.error(error?.message || "Erreur lors de l'envoi du trafic", {
+                position: "top-center",
+            });
+            throw error;
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    // Gestion des erreurs GPS
     function showError(error: GeolocationPositionError) {
         switch (error.code) {
             case error.PERMISSION_DENIED:
-                toast.error("Autorisation refusée", { position: "top-center" })
+                toast.error("Autorisation de localisation refusée par votre navigateur", { position: "top-center" });
                 break;
             case error.POSITION_UNAVAILABLE:
-                toast.error("Position indisponible", { position: "top-center" })
+                toast.error("Position GPS indisponible actuellement", { position: "top-center" });
                 break;
             case error.TIMEOUT:
-                toast.error("Délai dépassé pour récupérer la position", { position: "top-center" })
+                toast.error("Délai dépassé pour récupérer votre position", { position: "top-center" });
                 break;
             default:
-                toast.error("Une erreur inconnue s'est produite.", { position: "top-center" })
+                toast.error("Une erreur inconnue s'est produite lors de la géolocalisation.", { position: "top-center" });
                 break;
         }
     }
 
     return {
         startTracking,
+        addPosition,
+        setFix,
         isPending,
+        isSending,
         tracking,
-        fix
-    }
+        fix,
+    };
 }

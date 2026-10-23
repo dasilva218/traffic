@@ -2,43 +2,56 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-const context = createContext<{ socket: Socket | null }>({ socket: null, });
+interface SocketContextType {
+    socket: Socket | null;
+    isConnected: boolean;
+}
+
+const context = createContext<SocketContextType>({
+    socket: null,
+    isConnected: false,
+});
 
 export const useSocketContext = () => useContext(context);
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-    const URL_WEB_SOCKET = "ws://localhost:8080"
+    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080";
 
     useEffect(() => {
-        const initializeSocket = io(URL_WEB_SOCKET)
-        setSocket(initializeSocket)
-
-        initializeSocket.emit('connect-to-traffic')
+        const socketInstance = io(SOCKET_URL, {
+            transports: ["websocket", "polling"],
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+        });
 
         const handleConnect = () => {
-            setIsConnected(true)
-        }
+            console.log("Socket connected:", socketInstance.id);
+            setIsConnected(true);
+            socketInstance.emit("connect-to-traffic");
+        };
 
         const handleDisconnect = () => {
-            setIsConnected(false)
-        }
+            console.log("Socket disconnected");
+            setIsConnected(false);
+        };
 
-        initializeSocket.on('connect-to-traffic', handleConnect)
-        initializeSocket.on('disconnect', handleDisconnect)
+        socketInstance.on("connect", handleConnect);
+        socketInstance.on("disconnect", handleDisconnect);
+
+        setSocket(socketInstance);
 
         return () => {
-            initializeSocket.off('connect-to-traffic', handleConnect)
-            initializeSocket.off('disconnect', handleDisconnect)
-        }
-
-    }, [])
+            socketInstance.off("connect", handleConnect);
+            socketInstance.off("disconnect", handleDisconnect);
+            socketInstance.disconnect();
+        };
+    }, [SOCKET_URL]);
 
     return (
-        <context.Provider value={{ socket }}>
+        <context.Provider value={{ socket, isConnected }}>
             {children}
         </context.Provider>
-    )
+    );
 }
