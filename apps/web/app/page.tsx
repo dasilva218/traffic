@@ -1,102 +1,75 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
-
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+import { ROLES } from "@/data/static";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
+    <main className="flex-1">
+      <section className="relative isolate overflow-hidden border-b border-border">
+        <Image
+          src="/libreville-trafic.png"
+          alt="Vue aérienne d'un boulevard embouteillé de Libreville au crépuscule"
+          fill
           priority
+          sizes=""
+          className="object-cover opacity-35"
         />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+        <div className="absolute inset-0 bg-background/60" aria-hidden="true" />
+        <div className="relative mx-auto flex max-w-5xl flex-col gap-6 px-4 py-16 md:px-6 md:py-24">
+          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-primary">
+            Observatoire citoyen du trafic
+          </p>
+          <h1 className="max-w-3xl text-4xl leading-tight font-semibold text-balance md:text-6xl">
+            Les embouteillages de Libreville, signalés par ceux qui les vivent.
+          </h1>
+          <p className="max-w-2xl leading-relaxed text-muted-foreground text-pretty">
+            De Mont-Bouët au carrefour SNI d&apos;Owendo, chaque conducteur peut déclarer un blocage en quelques
+            secondes. Les autres consultent la carte avant de prendre la route.
+          </p>
+          <div className="max-w-2xl pt-2">
+            {/* <NetworkStrip /> */}
+          </div>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
-    </div>
+      </section>
+
+      <section className="mx-auto max-w-5xl px-4 py-12 md:px-6 md:py-16">
+        <h2 className="mb-6 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+          Choisissez votre rôle
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {ROLES.map((r) => {
+            const Icon = r.icon
+            return (
+              <Link
+                key={r.href}
+                href={r.href}
+                className="group flex flex-col gap-4 rounded-sm border border-border bg-card p-6 transition-colors hover:border-primary"
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`flex size-10 items-center justify-center rounded-sm ${r.primary ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                      }`}
+                  >
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {r.role}
+                  </span>
+                </div>
+                <h3 className="text-2xl font-semibold">{r.title}</h3>
+                <p className="leading-relaxed text-muted-foreground text-pretty">{r.text}</p>
+                <span className="mt-auto flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-primary">
+                  {r.cta}
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
+
+
+    </main>
   );
 }
