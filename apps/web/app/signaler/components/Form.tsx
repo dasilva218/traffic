@@ -141,11 +141,10 @@ export default function ReportForm({
                                 key={p.name}
                                 type="button"
                                 onClick={() => handleSelectPreset(p)}
-                                className={`text-left px-2.5 py-2 rounded-sm border text-xs transition-colors flex flex-col gap-0.5 cursor-pointer ${
-                                    isSelected
+                                className={`text-left px-2.5 py-2 rounded-sm border text-xs transition-colors flex flex-col gap-0.5 cursor-pointer ${isSelected
                                         ? "border-primary bg-primary/10 text-primary font-medium"
                                         : "border-border hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
-                                }`}
+                                    }`}
                             >
                                 <span className="font-sans font-medium line-clamp-1">{p.name}</span>
                                 <span className="font-mono text-[9px] opacity-75">{p.lat}, {p.lng}</span>

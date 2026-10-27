@@ -17,7 +17,7 @@ export const useSocketContext = () => useContext(context);
 export function SocketProvider({ children }: { children: React.ReactNode }) {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080";
+    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL;
 
     useEffect(() => {
         const socketInstance = io(SOCKET_URL, {
